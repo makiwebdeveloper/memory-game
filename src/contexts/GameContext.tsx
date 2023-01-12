@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useState } from "react";
+import { useTimer } from "../hooks/useTimer";
 import { ICell } from "../types/Cell.interface";
 import { getInitialBoard } from "../utils/getInitialBoard";
 
@@ -8,6 +9,8 @@ interface IGameContext {
   timeToVisible: number;
   restart: () => void;
   onCellClick: (id: number) => void;
+  timer: { m: number; s: number };
+  movesCount: number;
 }
 
 const GameContext = createContext<IGameContext | null>(null);
@@ -19,6 +22,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [timeToVisible, setTimeToVisible] = useState(3);
   const [prevCell, setPrevCell] = useState<ICell | null>(null);
   const [isTimeout, setIsTimeout] = useState(false);
+  const [movesCount, setMovesCount] = useState(0);
+
+  const [isFirstClick, setIsFirstClick] = useState(true);
+  const { timer, startTimer, stopTimer, setTimer } = useTimer();
 
   const start = () => {
     if (timeToVisible > 0) {
@@ -38,10 +45,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     if (timeToVisible === 0) {
       setTimeToVisible(3);
       setBoard(() => getInitialBoard());
+      setIsFirstClick(true);
+      stopTimer();
+      setTimer({ m: 0, s: 0 });
+      setMovesCount(0);
     }
   };
 
   const onCellClick = (id: number) => {
+    if (isFirstClick) {
+      startTimer();
+      setIsFirstClick(false);
+    }
+
     const clickedCell = board.find((cell) => cell.id === id);
 
     if (
@@ -71,8 +87,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           )
         );
         setPrevCell(null);
+        setMovesCount((prev) => prev + 1);
       } else {
         setIsTimeout(true);
+        setMovesCount((prev) => prev + 1);
         setTimeout(() => {
           setBoard((board) =>
             board.map((cell) =>
@@ -94,6 +112,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     restart,
     timeToVisible,
     onCellClick,
+    timer,
+    movesCount,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
