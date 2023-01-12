@@ -1,16 +1,23 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useTimer } from "../hooks/useTimer";
 import { ICell } from "../types/Cell.interface";
 import { getInitialBoard } from "../utils/getInitialBoard";
 
 interface IGameContext {
   board: ICell[];
-  start: () => void;
+  startGame: () => void;
   timeToVisible: number;
-  restart: () => void;
+  restartGame: () => void;
   onCellClick: (id: number) => void;
   timer: { m: number; s: number };
   movesCount: number;
+  isGameOver: boolean;
 }
 
 const GameContext = createContext<IGameContext | null>(null);
@@ -27,7 +34,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [isFirstClick, setIsFirstClick] = useState(true);
   const { timer, startTimer, stopTimer, setTimer } = useTimer();
 
-  const start = () => {
+  const startGame = () => {
     if (timeToVisible > 0) {
       setTimeout(() => {
         setTimeToVisible((prev) => prev - 1);
@@ -41,7 +48,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const restart = () => {
+  const restartGame = () => {
     if (timeToVisible === 0) {
       setTimeToVisible(3);
       setBoard(() => getInitialBoard());
@@ -49,6 +56,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       stopTimer();
       setTimer({ m: 0, s: 0 });
       setMovesCount(0);
+      setIsGameOver(false);
     }
   };
 
@@ -106,14 +114,22 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(() => {
+    if (board.every((cell) => cell.isFinded === true)) {
+      setIsGameOver(true);
+      stopTimer();
+    }
+  }, [board]);
+
   const value: IGameContext = {
     board,
-    start,
-    restart,
+    startGame,
+    restartGame,
     timeToVisible,
     onCellClick,
     timer,
     movesCount,
+    isGameOver,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
