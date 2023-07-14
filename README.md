@@ -7,6 +7,8 @@ The goal of the game is to match the numbers correctly as quickly as possible.
 - React.js
 - TailwindCSS
 
+#### Try here
+[https://memory-game-maki.netlify.app](https://memory-game-maki.netlify.app)
 
 #### Images
 
